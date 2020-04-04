@@ -5,14 +5,19 @@ import requests
 
 SUBURBS = ["Kellyville","Baulkham Hills"]
 PROPERTY_TYPES = ["Townhouse", "House"]
+DOMAIN_CREDENTIALS_FILENAME = "api_info.secret"
+
+def get_domain_credentials():
+	
+
 
 
 def main():
 
-	suburbObjList = []
+	suburb_obj_list = []
 
 	for s in SUBURBS:
-		suburbObjList.append(Suburb(s))
+		suburb_obj_list.append(Suburb(s))
 
 
 		
