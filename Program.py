@@ -56,7 +56,12 @@ def get_suburb_ids(access_token):
 	for s in SUBURBS:
 		url = "https://api.domain.com.au/v1/addressLocators?searchLevel=Suburb&suburb="+s+"&state=NSW"
 		r = send_request(access_token, url)
-		suburb_id_dict[s] = r[0]["ids"][0]["id"]
+
+		try:
+			suburb_id_dict[s] = r[0]["ids"][0]["id"]
+		except:
+			print(s + " does not exist in Domain!")
+		
 
 def plot_median_values(suburb_perf_data_list):
 	months = []
