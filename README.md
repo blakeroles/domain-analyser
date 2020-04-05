@@ -17,5 +17,4 @@ For this program to work, you will need to create an account with Domain Develop
 This file is in the .gitignore for security purposes.
 
 ## Package that this program uses
-json
-requests
+json,requests
