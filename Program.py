@@ -10,7 +10,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 # Program parameters
-SUBURBS = ["Kellyville", "Castle Hill", "Auburn"]
+SUBURBS = ["Baulkham Hills", "Castle Hill", "Auburn", "Winston Hills"]
 STATE = "NSW"
 PROPERTY_TYPES = ["Townhouse", "House"]
 DOMAIN_CREDENTIALS_FILENAME = "api_info.secret"
@@ -67,6 +67,7 @@ def plot_median_values(suburb_perf_data_list):
 	plt.xlabel("Month and Year")
 	plt.ylabel("Median Sold Price ($)")
 	plt.title(suburb_name + " Median Sold Price")
+	plt.grid()
 	plt.savefig("./Figures/" + suburb_name + "_Median_Sold_Price.png")
 
 
@@ -103,14 +104,6 @@ def main():
 
 	# For each suburb in surburb_id_dict, get the property statistics	
 	get_suburb_performance_statistics(suburb_id_dict, access_token)
-
-
-
-	#print(suburb_id_dict)
-
-
-
-
 
 
 
