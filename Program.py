@@ -28,7 +28,17 @@ def main():
 		suburb_obj_list.append(Suburb(s))
 
 
-		
+	# TESTING POST GET functionality
+	# POST request for token
+	response = requests.post('https://auth.domain.com.au/v1/connect/token', data = {'client_id':dc.client_id,"client_secret":dc.client_secret,"grant_type":"client_credentials","scope":"api_listings_read","Content-Type":"text/json"})
+	token=response.json()
+	access_token=token["access_token"]
+
+	url = "https://api.domain.com.au/v1/addressLocators?searchLevel=Address&streetNumber=100&streetName=Harris&streetType=Street&suburb=Pyrmont&state=NSW&postcode=2009"
+	auth = {"Authorization":"Bearer "+access_token}
+	request = requests.get(url,headers=auth)
+	r=request.json()
+	print(r)
 
 if __name__ == "__main__":
 	main()
