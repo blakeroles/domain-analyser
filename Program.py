@@ -1,12 +1,16 @@
+# Import all required classes / libraries
 from Suburb import Suburb
 from Property import Property
 from DomainCredentials import DomainCredentials
 from SuburbStatisticCaller import SuburbStatisticCaller
+from SuburbPerfData import SuburbPerfData
 import json
 import requests
+import pandas as pd
+import matplotlib.pyplot as plt
 
 # Program parameters
-SUBURBS = ["Kellyville"]
+SUBURBS = ["Kellyville", "Castle Hill", "Auburn"]
 STATE = "NSW"
 PROPERTY_TYPES = ["Townhouse", "House"]
 DOMAIN_CREDENTIALS_FILENAME = "api_info.secret"
@@ -15,9 +19,9 @@ api_scopes = "api_addresslocators_read api_suburbperformance_read"
 
 # Program parameters for Suburb Performance Statistics
 property_category = "house"
-chronological_span = 12
+chronological_span = 3
 t_plus_from = 1
-t_plus_to = 4
+t_plus_to = 24
 bedrooms = None # Get all bedroom types if None
 
 def get_domain_credentials():
@@ -45,9 +49,32 @@ def get_suburb_ids(access_token):
 		r = send_request(access_token, url)
 		suburb_id_dict[s] = r[0]["ids"][0]["id"]
 
+def plot_median_values(suburb_perf_data_list):
+	months = []
+	years = []
+	dates = []
+	median_sold_prices = []
+	suburb_name = ""
+	for s in suburb_perf_data_list:
+		months.append(s.month)
+		years.append(s.year)
+		dates.append(str(s.month) + '-' + str(s.year))
+		median_sold_prices.append(s.median_sold_price)
+		suburb_name = s.suburb_name
+
+	plt.figure(figsize=(20, 4))
+	plt.plot(dates, median_sold_prices)
+	plt.xlabel("Month and Year")
+	plt.ylabel("Median Sold Price ($)")
+	plt.title(suburb_name + " Median Sold Price")
+	plt.savefig("./Figures/" + suburb_name + "_Median_Sold_Price.png")
+
+
+
 def get_suburb_performance_statistics(suburb_id_dict, access_token):
-	for sid in suburb_id_dict.values():
-		ssc = SuburbStatisticCaller(STATE, sid, property_category, chronological_span, t_plus_from, t_plus_to, bedrooms)
+	for skey in suburb_id_dict:
+		suburb_perf_data_list = []
+		ssc = SuburbStatisticCaller(STATE, suburb_id_dict[skey], property_category, chronological_span, t_plus_from, t_plus_to, bedrooms)
 		
 		if (bedrooms is None):
 			url = "https://api.domain.com.au/v1/suburbPerformanceStatistics?state="+ssc.state+"&suburbId="+str(ssc.suburb_id)+"&PropertyCategory="+ssc.property_category+"&chronologicalSpan="+str(ssc.chronological_span)+"&tPlusFrom="+str(ssc.t_plus_from)+"&tPlusTo="+str(ssc.t_plus_to)
@@ -55,7 +82,11 @@ def get_suburb_performance_statistics(suburb_id_dict, access_token):
 			url = "https://api.domain.com.au/v1/suburbPerformanceStatistics?state="+ssc.state+"&suburbId="+str(ssc.suburb_id)+"&PropertyCategory="+ssc.property_category+"&chronologicalSpan="+str(ssc.chronological_span)+"&tPlusFrom="+str(ssc.t_plus_from)+"&tPlusTo="+str(ssc.t_plus_to)+"&bedrooms="+str(ssc.bedrooms)
 		
 		r = send_request(access_token, url)
-		print(r)
+		for data in r["series"]["seriesInfo"]:
+			suburb_perf_data_list.append(SuburbPerfData(suburb_id_dict[skey], skey, data["month"], data["year"], data["values"]["lowestSoldPrice"], data["values"]["highestSoldPrice"], data["values"]["medianSoldPrice"]))
+
+		plot_median_values(suburb_perf_data_list)
+			
 
 
 
@@ -79,12 +110,6 @@ def main():
 
 
 
-
-
-	suburb_obj_list = []
-
-	for s in SUBURBS:
-		suburb_obj_list.append(Suburb(s))
 
 
 
