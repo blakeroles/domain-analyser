@@ -1,6 +1,4 @@
 # Import all required classes / libraries
-from Suburb import Suburb
-from Property import Property
 from DomainCredentials import DomainCredentials
 from SuburbStatisticCaller import SuburbStatisticCaller
 from SuburbPerfData import SuburbPerfData
@@ -12,7 +10,6 @@ import matplotlib.pyplot as plt
 # Program parameters
 SUBURBS = []
 STATE = "NSW"
-PROPERTY_TYPES = ["Townhouse", "House"]
 DOMAIN_CREDENTIALS_FILENAME = "api_info.secret"
 JSON_CONFIG_FILENAME = "config.json"
 suburb_id_dict = {}
@@ -82,7 +79,7 @@ def plot_median_values(suburb_perf_data_list):
 	plt.ylabel("Median Sold Price ($)")
 	plt.title(suburb_name + " Median Sold Price")
 	plt.grid()
-	plt.savefig("./Figures/" + suburb_name + "_Median_Sold_Price.png")
+	plt.savefig("./Figures/Quarterly_Median_Sold_Prices/" + suburb_name + "_Median_Sold_Price.png")
 
 
 
