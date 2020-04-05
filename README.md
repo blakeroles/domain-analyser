@@ -16,5 +16,7 @@ For this program to work, you will need to create an account with Domain Develop
 
 This file is in the .gitignore for security purposes.
 
+config.json is also required which stores all the configuration settings for the program
+
 ## Package that this program uses
 json,requests,pandas,matplotlib

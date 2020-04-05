@@ -10,10 +10,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 # Program parameters
-SUBURBS = ["Baulkham Hills", "Castle Hill", "Auburn", "Winston Hills"]
+SUBURBS = []
 STATE = "NSW"
 PROPERTY_TYPES = ["Townhouse", "House"]
 DOMAIN_CREDENTIALS_FILENAME = "api_info.secret"
+JSON_CONFIG_FILENAME = "config.json"
 suburb_id_dict = {}
 api_scopes = "api_addresslocators_read api_suburbperformance_read"
 
@@ -22,7 +23,15 @@ property_category = "house"
 chronological_span = 3
 t_plus_from = 1
 t_plus_to = 24
-bedrooms = None # Get all bedroom types if None
+bedrooms = 3 # Get all bedroom types if None
+
+def read_json_config_file(JSON_CONFIG_FILENAME):
+	with open(JSON_CONFIG_FILENAME) as f:
+		data = json.load(f)
+
+	# Populate suburbs variable
+	for d in data["Suburbs"]:
+		SUBURBS.append(d["Name"])
 
 def get_domain_credentials():
 	with open(DOMAIN_CREDENTIALS_FILENAME) as f:
@@ -92,6 +101,9 @@ def get_suburb_performance_statistics(suburb_id_dict, access_token):
 
 
 def main():
+
+	# Populate variables from config.json
+	read_json_config_file(JSON_CONFIG_FILENAME)
 
 	# Get your domain credentials
 	dc = get_domain_credentials()
