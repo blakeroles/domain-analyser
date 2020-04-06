@@ -13,7 +13,7 @@ STATE = "NSW"
 DOMAIN_CREDENTIALS_FILENAME = "api_info.secret"
 JSON_CONFIG_FILENAME = "config.json"
 suburb_id_dict = {}
-api_scopes = "api_addresslocators_read api_suburbperformance_read"
+api_scopes = "api_addresslocators_read api_suburbperformance_read api_locations_read"
 
 # Program parameters for Suburb Performance Statistics
 property_category = "house"
@@ -100,8 +100,12 @@ def get_suburb_performance_statistics(suburb_id_dict, access_token):
 
 		plot_median_values(suburb_perf_data_list)
 			
-
-
+def get_suburb_location_profiles(suburb_id_dict, access_token):
+	for skey in suburb_id_dict:
+		url = "https://api.domain.com.au/v1/locations/profiles/" + str(suburb_id_dict[skey])
+		r = send_request(access_token, url)
+		
+		
 
 def main():
 
@@ -117,8 +121,11 @@ def main():
 	# Get all the Suburb IDs from SUBURBS list and store in a dictionary for later use
 	get_suburb_ids(access_token)
 
-	# For each suburb in surburb_id_dict, get the property statistics	
+	# For each suburb in suburb_id_dict, get the property statistics	
 	get_suburb_performance_statistics(suburb_id_dict, access_token)
+
+	# For each suburb in suburb_id_dict, get the location profiles
+	get_suburb_location_profiles(suburb_id_dict, access_token)
 
 
 
