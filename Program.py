@@ -22,13 +22,14 @@ t_plus_from = 1
 t_plus_to = 24
 bedrooms = 3 # Get all bedroom types if None
 
-def read_json_config_file(JSON_CONFIG_FILENAME):
+def read_suburbs_from_json_file(JSON_CONFIG_FILENAME):
 	with open(JSON_CONFIG_FILENAME) as f:
 		data = json.load(f)
 
 	# Populate suburbs variable
 	for d in data["Suburbs"]:
 		SUBURBS.append(d["Name"])
+
 
 def get_domain_credentials():
 	with open(DOMAIN_CREDENTIALS_FILENAME) as f:
@@ -105,7 +106,7 @@ def get_suburb_performance_statistics(suburb_id_dict, access_token):
 def main():
 
 	# Populate variables from config.json
-	read_json_config_file(JSON_CONFIG_FILENAME)
+	read_suburbs_from_json_file(JSON_CONFIG_FILENAME)
 
 	# Get your domain credentials
 	dc = get_domain_credentials()
