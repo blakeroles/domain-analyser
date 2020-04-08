@@ -7,6 +7,9 @@ import requests
 import pandas as pd
 import matplotlib.pyplot as plt
 import datetime
+import os
+import schedule
+import time
 
 # Program parameters
 SUBURBS = []
@@ -110,93 +113,99 @@ def get_daily_suburb_information(suburb_id_dict, access_token):
 	# Read in the data.json file first
 	try:
 		with open(JSON_DATA_FILENAME) as json_file:
-			data = json.load(json_file)
+			read_data = json.load(json_file)
 
+		json_data = get_daily_domain_suburb_information(suburb_id_dict, access_token, read_data)
+		os.remove(JSON_DATA_FILENAME)
+		df = open(JSON_DATA_FILENAME, 'w')
+		df.write(json.dumps(json_data, indent=4, sort_keys=True))
+		df.close()
+		current_date = datetime.datetime.now()
+		print("JSON File has been written to at " + str(current_date.day)+"-"+str(current_date.month)+"-"+str(current_date.year)+":"+str(current_date.hour)+"-"+str(current_date.minute)+"-"+str(current_date.second))
 		
 	except:
+		current_date = datetime.datetime.now()
 		print("JSON File is empty - appending to file for the first time")
-		get_daily_domain_suburb_information(suburb_id_dict, access_token)
+		print("JSON File has been written to at " + str(current_date.day)+"-"+str(current_date.month)+"-"+str(current_date.year)+":"+str(current_date.hour)+"-"+str(current_date.minute)+"-"+str(current_date.second))
+		json_data = get_daily_domain_suburb_information(suburb_id_dict, access_token)
+		df = open(JSON_DATA_FILENAME, 'w')
+		df.write(json.dumps(json_data, indent=4, sort_keys=True))
+		df.close()
 
-def get_daily_domain_suburb_information(suburb_id_dict, access_token):
+
+def get_daily_domain_suburb_information(suburb_id_dict, access_token, read_data=None):
 	# Get the date time object for use in the json file
 	current_date = datetime.datetime.now()
-	data = {}
-	prop_cat = {}
+	if (read_data == None):
+		data = {}
+	else:
+		data = read_data
 	# Each entry will be in its own datetime
 	current_date_for_json = str(current_date.day)+"-"+str(current_date.month)+"-"+str(current_date.year)+":"+str(current_date.hour)+"-"+str(current_date.minute)+"-"+str(current_date.second)
 	data[current_date_for_json] = []
 	for skey in suburb_id_dict:
+		prop_cat = []
 		url = "https://api.domain.com.au/v1/locations/profiles/" + str(suburb_id_dict[skey])
 		r = send_request(access_token, url)
-
-
-		prop_cat['PropertyCategory'] = 'House'
-		prop_cat['Bedrooms'] = 3
 		
+
+		for d in r['data']['propertyCategories']:
+			prop_cat.append({
+			'PropertyCategory' : d['propertyCategory'],
+			'Bedrooms' : d['bedrooms'],
+			'entryLevelPrice' : d['entryLevelPrice'],
+			'forSale' : d['forSale'],
+			'medianSoldPrice' : d['medianSoldPrice']
+			})	
+
+
 		data[current_date_for_json].append({
 			'Suburb': skey,
+			'ApartmentsAndUnitsForSale' : r['data']['apartmentsAndUnitsForSale'],
+			'TownhousesForSale' : r['data']['townhousesForSale'],
 			'PropertyCategories' : prop_cat
 		})
 
+	return data
 
-		#data['PropertyCategories'] = prop_cat
+def plot_data_json_information():
+	with open(JSON_DATA_FILENAME) as json_file:
+		read_data = json.load(json_file)
 
-
-		df = open(JSON_DATA_FILENAME, 'w')
-		df.write(json.dumps(data, indent=4, sort_keys=True))
-		df.close()
-
-
-
-
-def test_json():
-	data = {}
-	data['people'] = []
-	data['people'].append({
-	    'name': { 'dob' : 'test', 'age' : '24'},
-	    'website': 'stackabuse.com',
-	    'from': 'Nebraska'
-	})
-	data['people'].append({
-	    'name': { 'dob' : 'test', 'age' : '24'},
-	    'website': 'google.com',
-	    'from': 'Michigan'
-	})
-	data['people'].append({
-	    'name': { 'dob' : 'test', 'age' : '24'},
-	    'website': 'apple.com',
-	    'from': 'Alabama'
-	})
-
-	#dataFile = open()
-	#with open('data.txt', 'w') as outfile:
-	#    json.dump(data, indent=4, sort_keys=True, outfile)	
+	for r in read_data:
+		print(r)
 
 
 def main():
 
 	# Populate variables from config.json
-	read_suburbs_from_json_file(JSON_CONFIG_FILENAME)
+	#read_suburbs_from_json_file(JSON_CONFIG_FILENAME)
 
 	# Get your domain credentials
-	dc = get_domain_credentials()
+	#dc = get_domain_credentials()
 
 	# Get your auth token from Domain
-	access_token = get_auth_token(dc)
+	#access_token = get_auth_token(dc)
 
 	# Get all the Suburb IDs from SUBURBS list and store in a dictionary for later use
-	get_suburb_ids(access_token)
+	#get_suburb_ids(access_token)
 
 	# For each suburb in suburb_id_dict, get the property statistics	
-	get_suburb_performance_statistics(suburb_id_dict, access_token)
+	#get_suburb_performance_statistics(suburb_id_dict, access_token)
 
 	# For each suburb in suburb_id_dict, get the location profiles
-	get_suburb_location_profiles(suburb_id_dict, access_token)
+	#get_suburb_location_profiles(suburb_id_dict, access_token)
 
 	# For each suburb, get daily information and store to a json file
-	get_daily_suburb_information(suburb_id_dict, access_token)
+	#get_daily_suburb_information(suburb_id_dict, access_token)
 
-	#test_json()
+	# Plot the information from the JSON_DATA_FILE
+	plot_data_json_information()
 
 if __name__ == "__main__":
 	main()
+	#schedule.every(10).seconds.do(main)
+
+	#while True:
+	#	schedule.run_pending()
+	#	time.sleep(1)
