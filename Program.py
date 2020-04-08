@@ -121,6 +121,7 @@ def get_daily_domain_suburb_information(suburb_id_dict, access_token):
 	# Get the date time object for use in the json file
 	current_date = datetime.datetime.now()
 	data = {}
+	prop_cat = {}
 	# Each entry will be in its own datetime
 	current_date_for_json = str(current_date.day)+"-"+str(current_date.month)+"-"+str(current_date.year)+":"+str(current_date.hour)+"-"+str(current_date.minute)+"-"+str(current_date.second)
 	data[current_date_for_json] = []
@@ -128,12 +129,17 @@ def get_daily_domain_suburb_information(suburb_id_dict, access_token):
 		url = "https://api.domain.com.au/v1/locations/profiles/" + str(suburb_id_dict[skey])
 		r = send_request(access_token, url)
 
+
+		prop_cat['PropertyCategory'] = 'House'
+		prop_cat['Bedrooms'] = 3
+		
 		data[current_date_for_json].append({
 			'Suburb': skey,
-			'PropertyCategory' : []
+			'PropertyCategories' : prop_cat
 		})
 
-		data[current_date_for_json]['PropertyCategory'].append('hello')
+
+		#data['PropertyCategories'] = prop_cat
 
 
 		df = open(JSON_DATA_FILENAME, 'w')
