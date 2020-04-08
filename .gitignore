@@ -1,3 +1,5 @@
 *.secret
 config.json
+data.json
+data.txt
 /Figures/*

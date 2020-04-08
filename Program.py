@@ -6,12 +6,14 @@ import json
 import requests
 import pandas as pd
 import matplotlib.pyplot as plt
+import datetime
 
 # Program parameters
 SUBURBS = []
 STATE = "NSW"
 DOMAIN_CREDENTIALS_FILENAME = "api_info.secret"
 JSON_CONFIG_FILENAME = "config.json"
+JSON_DATA_FILENAME = "data.json"
 suburb_id_dict = {}
 api_scopes = "api_addresslocators_read api_suburbperformance_read api_locations_read"
 
@@ -83,7 +85,6 @@ def plot_median_values(suburb_perf_data_list):
 	plt.savefig("./Figures/Quarterly_Median_Sold_Prices/" + suburb_name + "_Median_Sold_Price.png")
 
 
-
 def get_suburb_performance_statistics(suburb_id_dict, access_token):
 	for skey in suburb_id_dict:
 		suburb_perf_data_list = []
@@ -104,8 +105,67 @@ def get_suburb_location_profiles(suburb_id_dict, access_token):
 	for skey in suburb_id_dict:
 		url = "https://api.domain.com.au/v1/locations/profiles/" + str(suburb_id_dict[skey])
 		r = send_request(access_token, url)
+
+def get_daily_suburb_information(suburb_id_dict, access_token):
+	# Read in the data.json file first
+	try:
+		with open(JSON_DATA_FILENAME) as json_file:
+			data = json.load(json_file)
+
 		
-		
+	except:
+		print("JSON File is empty - appending to file for the first time")
+		get_daily_domain_suburb_information(suburb_id_dict, access_token)
+
+def get_daily_domain_suburb_information(suburb_id_dict, access_token):
+	# Get the date time object for use in the json file
+	current_date = datetime.datetime.now()
+	data = {}
+	# Each entry will be in its own datetime
+	current_date_for_json = str(current_date.day)+"-"+str(current_date.month)+"-"+str(current_date.year)+":"+str(current_date.hour)+"-"+str(current_date.minute)+"-"+str(current_date.second)
+	data[current_date_for_json] = []
+	for skey in suburb_id_dict:
+		url = "https://api.domain.com.au/v1/locations/profiles/" + str(suburb_id_dict[skey])
+		r = send_request(access_token, url)
+
+		data[current_date_for_json].append({
+			'Suburb': skey,
+			'PropertyCategory' : []
+		})
+
+		data[current_date_for_json]['PropertyCategory'].append('hello')
+
+
+		df = open(JSON_DATA_FILENAME, 'w')
+		df.write(json.dumps(data, indent=4, sort_keys=True))
+		df.close()
+
+
+
+
+def test_json():
+	data = {}
+	data['people'] = []
+	data['people'].append({
+	    'name': { 'dob' : 'test', 'age' : '24'},
+	    'website': 'stackabuse.com',
+	    'from': 'Nebraska'
+	})
+	data['people'].append({
+	    'name': { 'dob' : 'test', 'age' : '24'},
+	    'website': 'google.com',
+	    'from': 'Michigan'
+	})
+	data['people'].append({
+	    'name': { 'dob' : 'test', 'age' : '24'},
+	    'website': 'apple.com',
+	    'from': 'Alabama'
+	})
+
+	#dataFile = open()
+	#with open('data.txt', 'w') as outfile:
+	#    json.dump(data, indent=4, sort_keys=True, outfile)	
+
 
 def main():
 
@@ -127,7 +187,10 @@ def main():
 	# For each suburb in suburb_id_dict, get the location profiles
 	get_suburb_location_profiles(suburb_id_dict, access_token)
 
+	# For each suburb, get daily information and store to a json file
+	get_daily_suburb_information(suburb_id_dict, access_token)
 
+	#test_json()
 
 if __name__ == "__main__":
 	main()
