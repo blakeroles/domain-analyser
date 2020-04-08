@@ -86,7 +86,7 @@ def plot_median_values(suburb_perf_data_list):
 	plt.title(suburb_name + " Median Sold Price")
 	plt.grid()
 	plt.savefig("./Figures/Quarterly_Median_Sold_Prices/" + suburb_name + "_Median_Sold_Price.png")
-
+	plt.close()
 
 def get_suburb_performance_statistics(suburb_id_dict, access_token):
 	for skey in suburb_id_dict:
@@ -163,49 +163,72 @@ def get_daily_domain_suburb_information(suburb_id_dict, access_token, read_data=
 			'Suburb': skey,
 			'ApartmentsAndUnitsForSale' : r['data']['apartmentsAndUnitsForSale'],
 			'TownhousesForSale' : r['data']['townhousesForSale'],
+			'HousesForSale' : r['data']['housesForSale'],
 			'PropertyCategories' : prop_cat
 		})
 
 	return data
 
-def plot_data_json_information():
+def plot_data_json_information(suburb_id_dict):
 	with open(JSON_DATA_FILENAME) as json_file:
 		read_data = json.load(json_file)
 
-	for r in read_data:
-		print(r)
+	for s in suburb_id_dict:
+		housesForSale = {}
+		townhousesForSale = {}
+		apartmentsAndUnitsForSale = {}
+		for r in read_data:
+			for q in read_data[r]:
+				if (s == q['Suburb']):
+					housesForSale[r] = q['HousesForSale']
+					townhousesForSale[r] = q['TownhousesForSale']
+					apartmentsAndUnitsForSale[r] = q['ApartmentsAndUnitsForSale']		
+		save_plot(housesForSale, "Houses_For_Sale", s)
+		save_plot(townhousesForSale, "Townhouses_For_Sale", s)
+		save_plot(apartmentsAndUnitsForSale, "Apartments_For_Sale", s)
+
+	
+def save_plot(dict_to_plot, string_to_save, suburb):
+	plt.figure(figsize=(20, 4))
+	plt.plot(dict_to_plot.keys(), dict_to_plot.values())
+	plt.xlabel("Date")
+	plt.ylabel(string_to_save)
+	plt.title(suburb + "_" + string_to_save + " vs Time")
+	plt.grid()
+	plt.savefig("./Figures/"+string_to_save +"/" + suburb + "_" + string_to_save + ".png")
+	plt.close()
 
 
 def main():
 
 	# Populate variables from config.json
-	#read_suburbs_from_json_file(JSON_CONFIG_FILENAME)
+	read_suburbs_from_json_file(JSON_CONFIG_FILENAME)
 
 	# Get your domain credentials
-	#dc = get_domain_credentials()
+	dc = get_domain_credentials()
 
 	# Get your auth token from Domain
-	#access_token = get_auth_token(dc)
+	access_token = get_auth_token(dc)
 
 	# Get all the Suburb IDs from SUBURBS list and store in a dictionary for later use
-	#get_suburb_ids(access_token)
+	get_suburb_ids(access_token)
 
 	# For each suburb in suburb_id_dict, get the property statistics	
-	#get_suburb_performance_statistics(suburb_id_dict, access_token)
+	get_suburb_performance_statistics(suburb_id_dict, access_token)
 
 	# For each suburb in suburb_id_dict, get the location profiles
-	#get_suburb_location_profiles(suburb_id_dict, access_token)
+	get_suburb_location_profiles(suburb_id_dict, access_token)
 
 	# For each suburb, get daily information and store to a json file
-	#get_daily_suburb_information(suburb_id_dict, access_token)
+	get_daily_suburb_information(suburb_id_dict, access_token)
 
 	# Plot the information from the JSON_DATA_FILE
-	plot_data_json_information()
+	plot_data_json_information(suburb_id_dict)
 
 if __name__ == "__main__":
-	main()
-	#schedule.every(10).seconds.do(main)
+	#main()
+	schedule.every().day.at("00:00").do(main)
 
-	#while True:
-	#	schedule.run_pending()
-	#	time.sleep(1)
+	while True:
+		schedule.run_pending()
+		time.sleep(1)
