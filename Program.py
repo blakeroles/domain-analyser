@@ -10,6 +10,8 @@ import datetime
 import os
 import schedule
 import time
+from dateutil.parser import parse
+from collections import OrderedDict
 
 # Program parameters
 SUBURBS = []
@@ -141,7 +143,7 @@ def get_daily_domain_suburb_information(suburb_id_dict, access_token, read_data=
 	else:
 		data = read_data
 	# Each entry will be in its own datetime
-	current_date_for_json = str(current_date.day)+"-"+str(current_date.month)+"-"+str(current_date.year)+":"+str(current_date.hour)+"-"+str(current_date.minute)+"-"+str(current_date.second)
+	current_date_for_json = str(current_date.year)+"-"+str(current_date.month)+"-"+str(current_date.day)
 	data[current_date_for_json] = []
 	for skey in suburb_id_dict:
 		prop_cat = []
@@ -177,26 +179,100 @@ def plot_data_json_information(suburb_id_dict):
 		housesForSale = {}
 		townhousesForSale = {}
 		apartmentsAndUnitsForSale = {}
+		medianSoldPrices = {}
 		for r in read_data:
 			for q in read_data[r]:
 				if (s == q['Suburb']):
 					housesForSale[r] = q['HousesForSale']
 					townhousesForSale[r] = q['TownhousesForSale']
-					apartmentsAndUnitsForSale[r] = q['ApartmentsAndUnitsForSale']		
+					apartmentsAndUnitsForSale[r] = q['ApartmentsAndUnitsForSale']
+					med_s_price = {}
+					for i in q['PropertyCategories']:
+						med_s_price[i['PropertyCategory']+"-"+str(i['Bedrooms'])] = i['medianSoldPrice']
+					medianSoldPrices[r] = med_s_price
+
+		#save_multiplot(medianSoldPrices, "Daily_Median_Sold_Prices", s)
 		save_plot(housesForSale, "Houses_For_Sale", s)
 		save_plot(townhousesForSale, "Townhouses_For_Sale", s)
 		save_plot(apartmentsAndUnitsForSale, "Apartments_For_Sale", s)
 
-	
+def sort_list(dict_list):
+	sorted_dates = []
+
+	while (len(dict_list) > 0):
+		min_day = 32
+		min_month = 13
+		min_year = 3000
+
+		for d in dict_list:
+			d_arr = d.split('-')
+			if (int(d_arr[2]) < min_year):
+				min_year = int(d_arr[2])
+
+		for d in dict_list:
+			d_arr = d.split('-')
+			if (int(d_arr[2]) == min_year):
+				if (int(d_arr[1]) < min_month):
+					min_month = int(d_arr[1])
+
+		i = 0
+		for d in dict_list:
+			d_arr = d.split('-')
+			if (int(d_arr[2]) == min_year):
+				if (int(d_arr[1]) == min_month):
+					if (int(d_arr[0]) < min_day):
+						min_day = int(d_arr[0])
+						ind = i
+
+			i += 1
+
+		sorted_dates.append(str(min_day)+"-"+str(min_month)+"-"+str(min_year))
+		del dict_list[ind]
+
+	return sorted_dates
+
+
+
 def save_plot(dict_to_plot, string_to_save, suburb):
+	dt = dict_to_plot.keys()
+	sorted_dates = sort_list(dt)
+
+	x_values = []
+	y_values = []
+
+	for i in sorted_dates:
+		x_values.append(i)
+		y_values.append(dict_to_plot[i])
+
 	plt.figure(figsize=(20, 4))
-	plt.plot(dict_to_plot.keys(), dict_to_plot.values())
+	plt.plot(x_values, y_values)
 	plt.xlabel("Date")
 	plt.ylabel(string_to_save)
 	plt.title(suburb + "_" + string_to_save + " vs Time")
 	plt.grid()
 	plt.savefig("./Figures/"+string_to_save +"/" + suburb + "_" + string_to_save + ".png")
 	plt.close()
+
+def save_multiplot(dict_to_plot, string_to_save, suburb):
+	dt = dict_to_plot.keys()
+	sorted_dates = sort_list(dt)
+
+	x_values = []
+	y_values_list = []
+
+	for i in sorted_dates:
+		x_values.append(i)
+		y_values_list.append(dict_to_plot[i])
+
+	plt.figure(figsize=(20,4))
+
+	for i in y_values_list:
+		for j in i:
+			print(i[j])
+
+
+				
+
 
 
 def main():
@@ -227,7 +303,8 @@ def main():
 
 if __name__ == "__main__":
 	#main()
-	schedule.every().day.at("00:00").do(main)
+	schedule.every().day.at("11:00").do(main)
+	#schedule.every(10).seconds.do(main)
 
 	while True:
 		schedule.run_pending()
