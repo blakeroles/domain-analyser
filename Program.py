@@ -143,7 +143,7 @@ def get_daily_domain_suburb_information(suburb_id_dict, access_token, read_data=
 	else:
 		data = read_data
 	# Each entry will be in its own datetime
-	current_date_for_json = str(current_date.year)+"-"+str(current_date.month)+"-"+str(current_date.day)
+	current_date_for_json = str(current_date.day)+"-"+str(current_date.month)+"-"+str(current_date.year)
 	data[current_date_for_json] = []
 	for skey in suburb_id_dict:
 		prop_cat = []
@@ -264,11 +264,8 @@ def save_multiplot(dict_to_plot, string_to_save, suburb):
 		x_values.append(i)
 		y_values_list.append(dict_to_plot[i])
 
-	plt.figure(figsize=(20,4))
-
-	for i in y_values_list:
-		for j in i:
-			print(i[j])
+	for i in range(len(y_values_list)):
+		print(y_values_list[i])
 
 
 				
